@@ -1,0 +1,87 @@
+---
+title: "Capstone"
+author: "James Stanfield"
+date: "5/3/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+c("data.table",
+  "ggplot2",
+  "here",
+  "lubridate",     # Excellent for manipulating and converting to and from 'date' data
+  "tidyverse",     # For data manipulation
+  "lattice",       # xyplot to look for effect of groups
+  "dtplyr",        # Pipes (%>%), mutate, etc.
+  "car",           # scatterplot
+  "plotly",        # For 3-d and interactive plots
+  "rvest",         # Data scraping from websites
+  "selectr",       # combine w/ rvest
+  "xml2",          # read xml data
+  "stringr",       # Data cleaning and prep
+  "jsonlite"       # work w/ JSON data
+  ) -> package_names
+for(package_name in package_names) {
+  if(!is.element(package_name, installed.packages()[,1])) {
+     install.packages(package_name,
+                      repos = "http://cran.mtu.edu/")
+  }
+  library(package_name, character.only=TRUE,
+          quietly=TRUE,verbose=FALSE)
+}
+
+rm(list=c("package_name", "package_names")) # clean up the environment
+
+options(show.signif.stars = FALSE)  # Don't confuse significance & effect size!
+
+set_here()  # So that this works anywhere
+
+set.seed(42)
+```
+
+
+
+
+
+### my attempt to scrape from yahoo
+
+```{r}
+#Specifying the url for desired website to be scrapped
+
+url1 <- 'https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671'
+```
+
+```{r}
+yahoo1 <- read_html(url1)
+```
+
+```{r}
+title_html1 <- html_nodes(yahoo1, css = "h4")
+title_html1
+```
+
+```{r}
+title1 <- html_text(title_html1)
+title1
+```
+
+```{r}
+title_html1 <- html_nodes(yahoo1, css = "h4")
+title_html1
+```
+
+
+
+
+
+
+
+
+
+
+
+
