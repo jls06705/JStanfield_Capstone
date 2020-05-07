@@ -75,6 +75,43 @@ restNames
 
 ```
 
+### build system for allmenus
+
+```{r}
+state.city <- data.frame(state = c('ma', 'me'), 
+                         city = c('boston','portland')
+                         ) %>% 
+  expand_grid(., data.frame(type = c('seafood')))
+
+urls <- paste0("https://www.allmenus.com/", state.city$state, "/", state.city$city, "/-/", state.city$type, "/")
+
+test <- "https://www.allmenus.com/"
+
+typeof(test)
+typeof(urls[1])
+
+map(urls, read_html)
+
+boston <- read_html(urls) %>% 
+  html_node(., "h4")
+
+### work on acquiring restaurant titles from allmenus
+
+urlallmenu <- "https://www.allmenus.com/ma/boston/-/seafood/"
+
+allmenu_html <- read_html(urlallmenu)
+
+allmenu_number <- html_node(allmenu_html, "h1")
+
+number_text <- html_text(allmenu_number)
+
+number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , "")), 2, 3))
+
+number.titles
+
+
+```
+```
 
 
 
