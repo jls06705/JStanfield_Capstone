@@ -23,7 +23,8 @@ c("data.table",
   "selectr",       # combine w/ rvest
   "xml2",          # read xml data
   "stringr",       # Data cleaning and prep
-  "jsonlite"       # work w/ JSON data
+  "jsonlite",      # work w/ JSON data
+  "purrr"         # map function
   ) -> package_names
 for(package_name in package_names) {
   if(!is.element(package_name, installed.packages()[,1])) {
@@ -43,8 +44,35 @@ set_here()  # So that this works anywhere
 set.seed(42)
 ```
 
+```{r}
+offset = c(15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225)
+
+urls <- c('https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671',
+          paste0('https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671', '&offset=',  offset))
+```
+
+```{r}
+for (i in 1:16) {
+ temp <- read_html(urls[i])
+ yahoos <- c(yahoos, temp)
+  
+}
+```
 
 
+```{r}
+for (i in 1:16) {
+
+  thisTitle <- html_nodes(yahoos[[i]], "h4") %>% html_text() %>% as.character()
+  #TotalGoals <- html_nodes(WS1, ".trow3+ .trow2 td~ td+ td font b") %>% html_text() %>% as.character()
+  #can use the above to pull and add another list of data from a url
+  temp <- data.frame(thisTitle)
+  resNames <- c(resNames, temp)
+  cat("*")
+}
+
+resNames
+```
 
 
 ### my attempt to scrape from yahoo
@@ -64,6 +92,9 @@ url5 <- 'https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3o
 
 url6 <- 'https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood%20restaurants&addr=Boston%2C%20MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671&offset=75'
 ```
+
+
+
 
 ```{r}
 yahoo1 <- read_html(url1)
@@ -124,6 +155,15 @@ wholeID1 <- html_text(wholeID_html1)
 wholeID1
 ```
 
+```{r}
+test_html1 <- html_nodes(yahoo1, ".Pb-4")
+test_html1
+```
+
+```{r}
+test1 <- html_text(test_html1)
+test1
+```
 
 
 
