@@ -92,7 +92,7 @@ typeof(urls[1])
 
 map(urls, read_html)
 
-boston <- read_html(urls) %>% 
+boston <- map(urls, read_html) %>% 
   html_node(., "h4")
 
 ### work on acquiring restaurant titles from allmenus
@@ -109,8 +109,20 @@ number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , 
 
 number.titles
 
+allmenu_names <- data.frame(name = character())
 
-```
+for (i in 1:number.titles) {
+
+html_node(allmenu_html, paste0(".clearfix:nth-child(", i, ") a") ) %>%
+    html_text() %>%
+    unlist() -> temp
+
+  c(allmenu_names, temp) -> allmenu_names
+}
+
+allmenu_names <- data.frame( unlist(allmenu_names) )
+
+allmenu_names
 ```
 
 
