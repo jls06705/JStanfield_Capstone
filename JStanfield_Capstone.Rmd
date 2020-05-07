@@ -61,17 +61,18 @@ for (i in 1:16) {
 
 
 ```{r}
+restNames <- data.frame()
+
 for (i in 1:16) {
 
-  thisTitle <- html_nodes(yahoos[[i]], "h4") %>% html_text() %>% as.character()
-  #TotalGoals <- html_nodes(WS1, ".trow3+ .trow2 td~ td+ td font b") %>% html_text() %>% as.character()
-  #can use the above to pull and add another list of data from a url
-  temp <- data.frame(thisTitle)
-  resNames <- c(resNames, temp)
+  thisTitle <- html_nodes(yahoos[[i]], "h4") %>% html_text() #%>% as.character()
+  restNames <- c(restNames, thisTitle)
   cat("*")
 }
 
-resNames
+restNames <- data.frame(unlist(restNames))
+restNames
+
 ```
 
 
