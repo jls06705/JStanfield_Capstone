@@ -75,9 +75,10 @@ restNames
 
 ```
 
-### build system for allmenus
+### build systems for allmenus
 
 ```{r}
+#build iterator for allmenus urls
 state.city <- data.frame(state = c('ma', 'me'), 
                          city = c('boston','portland')
                          ) %>% 
@@ -94,8 +95,12 @@ map(urls, read_html)
 
 boston <- map(urls, read_html) %>% 
   html_node(., "h4")
+```
 
-### work on acquiring restaurant titles from allmenus
+I think a for loop will work to connect the iterator above to the scraping machine blow.
+
+```{r}
+### work on acquiring restaurant titles from allmenus (working)
 
 urlallmenu <- "https://www.allmenus.com/ma/boston/-/seafood/"
 
