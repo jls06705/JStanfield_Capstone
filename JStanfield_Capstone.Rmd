@@ -84,27 +84,21 @@ state.city <- data.frame(state = c('ma', 'me'),
                          ) %>% 
   expand_grid(., data.frame(type = c('seafood')))
 
-urls <- paste0("https://www.allmenus.com/", state.city$state, "/", state.city$city, "/-/", state.city$type, "/")
+urlallmenu <- paste0("https://www.allmenus.com/", state.city$state, "/", state.city$city, "/-/", state.city$type, "/")
 
-test <- "https://www.allmenus.com/"
 
-typeof(test)
-typeof(urls[1])
-
-map(urls, read_html)
-
-boston <- map(urls, read_html) %>% 
-  html_node(., "h4")
 ```
 
-I think a for loop will work to connect the iterator above to the scraping machine blow.
+
 
 ```{r}
-### work on acquiring restaurant titles from allmenus (working)
+### Run each URL through scraping machine and combine everything into one data.frame
 
-urlallmenu <- "https://www.allmenus.com/ma/boston/-/seafood/"
+fullset_allmenu_names <- data.frame(name = character())
 
-allmenu_html <- read_html(urlallmenu)
+for (i in 1:2) {
+
+allmenu_html <- read_html(urlallmenu[i])
 
 allmenu_number <- html_node(allmenu_html, "h1")
 
@@ -113,6 +107,8 @@ number_text <- html_text(allmenu_number)
 number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , "")), 2, 3))
 
 number.titles
+
+
 
 allmenu_names <- data.frame(name = character())
 
@@ -125,9 +121,13 @@ html_node(allmenu_html, paste0(".clearfix:nth-child(", i, ") a") ) %>%
   c(allmenu_names, temp) -> allmenu_names
 }
 
-allmenu_names <- data.frame( unlist(allmenu_names) )
+fullset_allmenu_names <- c(fullset_allmenu_names, allmenu_names)
 
-allmenu_names
+}
+
+fullset_allmenu_names <- data.frame( unlist(fullset_allmenu_names) )
+
+fullset_allmenu_names
 ```
 
 
