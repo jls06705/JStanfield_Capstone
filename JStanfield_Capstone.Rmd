@@ -44,43 +44,17 @@ set_here()  # So that this works anywhere
 set.seed(42)
 ```
 
-```{r}
-offset = c(15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225)
 
-urls <- c('https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671',
-          paste0('https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671', '&offset=',  offset))
-```
-
-```{r}
-for (i in 1:16) {
- temp <- read_html(urls[i])
- yahoos <- c(yahoos, temp)
-  
-}
-```
-
-
-```{r}
-restNames <- data.frame()
-
-for (i in 1:16) {
-
-  thisTitle <- html_nodes(yahoos[[i]], "h4") %>% html_text() #%>% as.character()
-  restNames <- c(restNames, thisTitle)
-  cat("*")
-}
-
-restNames <- data.frame(unlist(restNames))
-restNames
-
-```
 
 ### build systems for allmenus
 
 ```{r}
 #build iterator for allmenus urls
-state.city <- data.frame(state = c('ma', 'me'), 
-                         city = c('boston','portland')
+
+#using top ten most populous cities in New England
+
+state.city <- data.frame(state = c('ma', 'ma', 'ri', 'ma', 'ct', 'ct', 'ct', 'ct', 'ct', 'nh'), 
+                         city = c('boston','worcester', 'providence', 'springfield', 'bridgeport', 'new-haven', 'hartford', 'stamford', 'waterbury', 'manchester')
                          ) %>% 
   expand_grid(., data.frame(type = c('seafood')))
 
@@ -96,7 +70,7 @@ urlallmenu <- paste0("https://www.allmenus.com/", state.city$state, "/", state.c
 
 fullset_allmenu_names <- data.frame(name = character())
 
-for (i in 1:2) {
+for (i in 1:10) {
 
 allmenu_html <- read_html(urlallmenu[i])
 
@@ -125,12 +99,39 @@ fullset_allmenu_names <- c(fullset_allmenu_names, allmenu_names)
 
 }
 
-fullset_allmenu_names <- data.frame( unlist(fullset_allmenu_names) )
+fullset_allmenu_names <- data.frame( na.omit(unlist(fullset_allmenu_names) ) )
 
 fullset_allmenu_names
 ```
 
+### scrape menu for each restaurant
 
+```{r}
+url.menu <- 'https://www.allmenus.com/nh/manchester/-/seafood/'
+url.menu_html <- read_html(url.menu)
+url.menu_node <- html_nodes(url.menu_html, css = '.clearfix:nth-child(1) a')
+
+url.menu_node
+
+doc <- htmlParse(url.menu_html)
+links <- xpathSApply(doc, "//a/@href")
+html_text(links[[1]])
+
+allLinks <- data.frame()
+
+for (i in 1:16) {
+
+  thisLink <-  html_text()#%>% as.character()
+  restNames <- c(restNames, thisTitle)
+  cat("*")
+}
+
+restNames <- data.frame(unlist(restNames))
+restNames
+
+str_replace_all(links, "[\r\n]" , "")
+str_replace_all(links, "[/nh/manchester/-/seafood/]" , "")
+```
 
 
 
