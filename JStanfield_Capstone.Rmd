@@ -142,23 +142,6 @@ nrow(links.df)
 ```
 
 ```{r}
-url.menu <- 'https://www.allmenus.com/nh/manchester/-/seafood/'
-url.menu_html <- read_html(url.menu)
-
-doc <- htmlParse(url.menu_html)
-links <- xpathSApply(doc, "//a/@href")
-
-unlinks <- unlist(links, use.names = FALSE)
-links.df <- data.frame(unlinks)
-
-mutate()
-
-for (i in links.df) {
-  T_F <- grepl("/menu/", links.df[i, 1])
-  #links.df$menulink[i, 2] <- T_F
-  cat("*")
-}
-##############################################################
 
 URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
 
