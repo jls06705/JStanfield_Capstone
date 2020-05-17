@@ -158,15 +158,25 @@ for (i in links.df) {
   #links.df$menulink[i, 2] <- T_F
   cat("*")
 }
-
+##############################################################
 
 URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
 
 pg <- read_html(URL)
 
 links <- html_attr(html_nodes(pg, "a"), "href")
-links
+unlinks <- unlist(links, use.names = FALSE)
+links.df <- data.frame(unlinks)
+linksTF <- (menuTF = logical())
 
+for (i in 1:nrow(links.df)) {
+  T_F <- grepl("/menu/", unlinks[i])
+  linksTF <- c(linksTF, T_F)
+  cat("*")
+}
+
+mutate(links.df, menuTF = linksTF) %>%
+  filter(linksTF == TRUE) -> menulinks.df
 ```
 
 
