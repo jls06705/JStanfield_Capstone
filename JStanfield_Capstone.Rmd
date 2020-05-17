@@ -104,45 +104,10 @@ fullset_allmenu_names <- data.frame( na.omit(unlist(fullset_allmenu_names) ) )
 fullset_allmenu_names
 ```
 
-### scrape menu for each restaurant
+### scrape menu links for each restaurant on city page
 
 ```{r}
-url.menu <- 'https://www.allmenus.com/nh/manchester/-/seafood/'
-url.menu_html <- read_html(url.menu)
-url.menu_node <- html_nodes(url.menu_html, css = '.clearfix:nth-child(1) a')
-
-url.menu_node
-
-grepl("/menu/", url.menu_node)
-
-doc <- htmlParse(url.menu_html)
-links <- xpathSApply(doc, "//a/@href")
-#html_text(links[[1]])
-
-#allLinks <- data.frame()
-
-links2 <- str_replace_all(links, "[\r\n]" , "")
-links.df <- data.frame(unlist(links2))
-links.df <- mutate(links.df, menulink = FALSE)
-link_number <- nrow(links.df)
-
-library(RCurl)
-
-url2<-getURL(url.menu)
-parsed<-htmlParse(url2)
-links<-xpathSApply(parsed,path = "//a",xmlGetAttr,"href")
-
-for (i in links.df) {
-  T_F <- grepl("/menu/", links.df[i, 1])
-  #links.df$menulink[i, 2] <- T_F
-  cat("*")
-}
-filter(links.df, 1)
-nrow(links.df)
-```
-
-```{r}
-
+# Scrape menu links from a city page
 URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
 
 pg <- read_html(URL)
@@ -160,8 +125,24 @@ for (i in 1:nrow(links.df)) {
 
 mutate(links.df, menuTF = linksTF) %>%
   filter(linksTF == TRUE) -> menulinks.df
+
+menulinks.df
 ```
 
+### scrape the menu items from the menu page
+
+```{r}
+menuURL <- "https://www.allmenus.com/nh/manchester/39813-the-yard-seafood-steakhouse/menu/"
+
+menuURL_html <- read_html(menuURL)
+
+menuURL_node <- html_node(menuURL_html, css = ".menu-items")
+
+menuURL_text <- html_text(menuURL_node)
+
+menuURL_text
+
+```
 
 
 
