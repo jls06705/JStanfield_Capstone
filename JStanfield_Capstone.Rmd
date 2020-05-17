@@ -113,24 +113,22 @@ url.menu_node <- html_nodes(url.menu_html, css = '.clearfix:nth-child(1) a')
 
 url.menu_node
 
+grepl("/menu/", url.menu_node)
+
 doc <- htmlParse(url.menu_html)
 links <- xpathSApply(doc, "//a/@href")
-html_text(links[[1]])
+#html_text(links[[1]])
 
-allLinks <- data.frame()
+#allLinks <- data.frame()
 
-for (i in 1:16) {
+links2 <- str_replace_all(links, "[\r\n]" , "")
+links.df <- data.frame(links2)
 
-  thisLink <-  html_text()#%>% as.character()
-  restNames <- c(restNames, thisTitle)
-  cat("*")
+for (i in links.df) {
+  T_F <- grepl("/menu/", links.df[i])
+  mutate(links.df[i], menulink = T_F)
 }
 
-restNames <- data.frame(unlist(restNames))
-restNames
-
-str_replace_all(links, "[\r\n]" , "")
-str_replace_all(links, "[/nh/manchester/-/seafood/]" , "")
 ```
 
 
