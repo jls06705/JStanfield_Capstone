@@ -136,11 +136,32 @@ menuURL <- "https://www.allmenus.com/nh/manchester/39813-the-yard-seafood-steakh
 
 menuURL_html <- read_html(menuURL)
 
-menuURL_node <- html_node(menuURL_html, css = ".item-title")
+menuitem <- (item = character())
 
-menuURL_text <- html_text(menuURL_node)
+tempitem <- (item = character())
 
-menuURL_text
+for (i in 1:1000) {
+
+menuURL_node <- html_node(menuURL_html, css = paste0(".menu-items:nth-child(", i, ") .item-title"))
+
+test <- html_node(menuURL_html, css = ".menu-items:nth-child(6) .item-title")
+test2 <- html_text(test)
+test2
+
+tempitem <- html_text(menuURL_node)
+
+
+  if (is.na(tempitem) == TRUE) {
+  
+   break()
+  
+  } else
+
+  menuitem <- c(menuitem, tempitem)
+
+}
+
+menuitem
 
 ```
 
