@@ -144,6 +144,19 @@ test2
 
 ```
 
+```{r}
+addressURL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
+
+addressURL_html <- read_html(addressURL)
+
+testadd <- html_nodes(addressURL_html, css = ".s-col-sm-4")
+test2add <- html_text(testadd)
+#test2add
+
+test2addclean <- str_replace_all(test2add, "[\r\n]" , "")
+
+test2addcleanfinal <- str_replace_all(test2addclean, "   " , "")
+```
 
 
 
