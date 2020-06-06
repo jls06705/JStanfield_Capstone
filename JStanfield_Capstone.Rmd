@@ -44,6 +44,34 @@ set_here()  # So that this works anywhere
 set.seed(42)
 ```
 
+### Google api
+
+```{r}
+#confirm you've removed the CRAN version of ("ggmap") '2.6.1'. via 
+remove.packages("ggmap")
+#once removed you will also need to confirm the removal of ("tibble") using the above method.
+remove.packages("tibble")
+devtools::install_github("dkahle/ggmap", ref = "tidyup")
+#you will be prompted to install tibble, select 'Y'
+#Install should begin
+#if asked "Do you want to install from sources the package which needs compilation?" select no
+#install.packages("devtools")
+#devtools::install_github("dkahle/ggmap")
+
+#if(!requireNamespace("devtools")) install.packages("devtools")
+#devtools::install_github("dkahle/ggmap")
+#
+#install.packages("ggmap")
+library("ggmap")
+library(devtools)
+register_google(key = "API Key")
+getOption("ggmap")
+
+geocode("33 S Commercial St
+
+Manchester, NH, 03101")
+```
+
 
 
 ### build systems for allmenus
@@ -96,6 +124,27 @@ html_node(allmenu_html, paste0(".clearfix:nth-child(", i, ") a") ) %>%
 }
 
 fullset_allmenu_names <- c(fullset_allmenu_names, allmenu_names)
+
+# Scrape menu links from a city page
+URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
+
+pg <- read_html(URL)
+
+links <- html_attr(html_nodes(pg, "a"), "href")
+unlinks <- unlist(links, use.names = FALSE)
+links.df <- data.frame(unlinks)
+linksTF <- (menuTF = logical())
+
+for (i in 1:nrow(links.df)) {
+  T_F <- grepl("/menu/", unlinks[i])
+  linksTF <- c(linksTF, T_F)
+  cat("*")
+}
+
+mutate(links.df, menuTF = linksTF) %>%
+  filter(linksTF == TRUE) -> menulinks.df
+
+menulinks.df
 
 }
 
