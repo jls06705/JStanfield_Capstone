@@ -1,0 +1,224 @@
+---
+title: "scrap_paper"
+author: "James Stanfield"
+date: "5/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(echo = TRUE)
+
+c("data.table",
+  "ggplot2",
+  "here",
+  "lubridate",     # Excellent for manipulating and converting to and from 'date' data
+  "tidyverse",     # For data manipulation
+  "lattice",       # xyplot to look for effect of groups
+  "dtplyr",        # Pipes (%>%), mutate, etc.
+  "car",           # scatterplot
+  "plotly",        # For 3-d and interactive plots
+  "rvest",         # Data scraping from websites
+  "selectr",       # combine w/ rvest
+  "xml2",          # read xml data
+  "XML",
+  "stringr",       # Data cleaning and prep
+  "jsonlite"       # work w/ JSON data
+  ) -> package_names
+for(package_name in package_names) {
+  if(!is.element(package_name, installed.packages()[,1])) {
+     install.packages(package_name,
+                      repos = "http://cran.mtu.edu/")
+  }
+  library(package_name, character.only=TRUE,
+          quietly=TRUE,verbose=FALSE)
+}
+
+rm(list=c("package_name", "package_names")) # clean up the environment
+
+options(show.signif.stars = FALSE)  # Don't confuse significance & effect size!
+
+set_here()  # So that this works anywhere
+
+set.seed(42)
+```
+
+### example from https://www.freecodecamp.org/news/an-introduction-to-web-scraping-using-r-40284110c848/
+
+### https://www.analyticsvidhya.com/blog/2017/03/beginners-guide-on-web-scraping-in-r-using-rvest-with-hands-on-knowledge/ also useful
+
+```{r}
+url <- 'https://www.amazon.in/OnePlus-Mirror-Black-64GB-Memory/dp/B0756Z43QS?tag=googinhydr18418-21&tag=googinkenshoo-21&ascsubtag=aee9a916-6acd-4409-92ca-3bdbeb549f80'
+```
+
+```{r}
+webpage <- read_html(url)
+```
+
+```{r}
+title_html <- html_nodes(webpage, 'h1#title')
+```
+
+```{r}
+title <- html_text(title_html)
+head(title)
+```
+
+```{r}
+str_replace_all(title, "[\r\n]" , "")
+```
+
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(purrr)
+
+state.city <- data.frame(state = c('ma', 'me'), 
+                         city = c('boston','portland')
+                         ) %>% 
+  expand_grid(., data.frame(type = c('seafood')))
+
+urls <- paste0("https://www.allmenus.com/", state.city$state, "/", state.city$city, "/-/", state.city$type, "/")
+
+test <- "https://www.allmenus.com/"
+
+typeof(test)
+typeof(urls[1])
+
+map(urls, read_html)
+
+boston <- read_html(urls) %>% 
+  html_node(., "h4")
+
+### work on acquiring restaurant titles from allmenus
+
+urlallmenu <- "https://www.allmenus.com/ma/boston/-/seafood/"
+
+allmenu_html <- read_html(urlallmenu)
+
+allmenu_number <- html_node(allmenu_html, "h1")
+
+number_text <- html_text(allmenu_number)
+
+number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , "")), 2, 3))
+
+number.titles
+
+
+```
+
+-------------------------------------------------------------
+
+```{r}
+(map(urls, read_html)) -> yahoos
+
+as.character(yahoos) -> yahoos.chr
+
+names(unlist(yahoos)) -> yahoos.chr
+
+typeof(yahoo1)
+
+yahoos1 <- yahoos
+
+yahoos.df <- data.frame(matrix(unlist(yahoos.chr), nrow=16, byrow=T),stringsAsFactors=FALSE)
+```
+
+```{r}
+yahoos.number <- c(1:16)
+
+resNames <- html_node(yahoos[[2]], "h4")
+
+titletest <- html_text(resNames)
+
+resNames <- map(html_node(yahoos, css = "h4"), yahoos)
+```
+
+
+```{r}
+for (i in 1:16) {
+
+  thisTitle <- html_nodes(yahoos[[i]], "h4") %>% html_text() %>% as.character()
+  #TotalGoals <- html_nodes(WS1, ".trow3+ .trow2 td~ td+ td font b") %>% html_text() %>% as.character()
+  #can use the above to pull and add another list of data from a url
+  #temp <- data.frame(thisTitle)
+  #resNames <- c(resNames, temp)
+  cat("*")
+}
+
+resNames
+```
+
+```{r}
+offset = c(15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225)
+
+urls <- c('https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671',
+          paste0('https://search.yahoo.com/local/s;_ylt=A2KIbZws065eaecA.C1XNyoA;_ylu=X3oDMTEyOGE3dmNtBGNvbG8DYmYxBHBvcwMxBHZ0aWQDQjg3NDZfMQRzZWMDc2M-?p=seafood+restaurants&addr=Boston%2C+MA&loc=woeid%3A2367105&fr=mcafee&guce_referrer=aHR0cHM6Ly9zZWFyY2gueWFob28uY29tL3NlYXJjaD9mcj1tY2FmZWUmdHlwZT1FMjExVVMxMDVHMCZwPWJvc3RvbittYStzZWFmb29kK3Jlc3RhdXJhbnRz&guce_referrer_sig=AQAAAIa-95qAeZP62L9EE00TWQp4Hg4S5igVQVtT7N536LnBfGr_LDdgPKjrsNOE3YDvF8Z45gggOiSopqU38TNfN6rMfWW2_kPK2Nk7rEP1PPTsXKt1hjWBaWHC5zxZsq3aRZkLshyjAico43TnxOnA8TuGQUHJCP51HJGuu9BCBM0Z&_guc_consent_skip=1588515671', '&offset=',  offset))
+```
+
+```{r}
+for (i in 1:16) {
+ temp <- read_html(urls[i])
+ yahoos <- c(yahoos, temp)
+  
+}
+```
+
+
+```{r}
+restNames <- data.frame()
+
+for (i in 1:16) {
+
+  thisTitle <- html_nodes(yahoos[[i]], "h4") %>% html_text() #%>% as.character()
+  restNames <- c(restNames, thisTitle)
+  cat("*")
+}
+
+restNames <- data.frame(unlist(restNames))
+restNames
+
+```
+
+### scrape menu for each restaurant
+
+```{r}
+url.menu <- 'https://www.allmenus.com/nh/manchester/-/seafood/'
+url.menu_html <- read_html(url.menu)
+url.menu_node <- html_nodes(url.menu_html, css = '.clearfix:nth-child(1) a')
+
+url.menu_node
+
+doc <- htmlParse(url.menu_html)
+links <- xpathSApply(doc, "//a/@href")
+html_text(links[[1]])
+
+allLinks <- data.frame()
+
+for (i in 1:16) {
+
+  thisLink <-  html_text()#%>% as.character()
+  restNames <- c(restNames, thisTitle)
+  cat("*")
+}
+
+restNames <- data.frame(unlist(restNames))
+restNames
+```
+
+```{r}
+library('RSelenium')
+RSelenium::rsDriver
+startServer() # run Selenium Server binary
+remDr <- remoteDriver(browserName="firefox", port=4444) # instantiate remote driver to connect to Selenium Server
+remDr$open(silent=T) # open web browser
+```
+
+
+
+
+
+
+
+
