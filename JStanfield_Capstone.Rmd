@@ -110,8 +110,6 @@ number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , 
 
 number.titles
 
-
-
 allmenu_names <- data.frame(name = character())
 
 for (i in 1:number.titles) {
@@ -125,27 +123,6 @@ html_node(allmenu_html, paste0(".clearfix:nth-child(", i, ") a") ) %>%
 
 fullset_allmenu_names <- c(fullset_allmenu_names, allmenu_names)
 
-# Scrape menu links from a city page
-URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
-
-pg <- read_html(URL)
-
-links <- html_attr(html_nodes(pg, "a"), "href")
-unlinks <- unlist(links, use.names = FALSE)
-links.df <- data.frame(unlinks)
-linksTF <- (menuTF = logical())
-
-for (i in 1:nrow(links.df)) {
-  T_F <- grepl("/menu/", unlinks[i])
-  linksTF <- c(linksTF, T_F)
-  cat("*")
-}
-
-mutate(links.df, menuTF = linksTF) %>%
-  filter(linksTF == TRUE) -> menulinks.df
-
-menulinks.df
-
 }
 
 fullset_allmenu_names <- data.frame( na.omit(unlist(fullset_allmenu_names) ) )
@@ -157,25 +134,54 @@ fullset_allmenu_names
 
 ```{r}
 # Scrape menu links from a city page
-URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
+all_menu_links <- data.frame(character())
+for (i in 1:10) {
 
-pg <- read_html(URL)
+allmenu_html <- read_html(urlallmenu[i])
+
+print(urlallmenu[i])
+
+#URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
+
+pg <- allmenu_html
 
 links <- html_attr(html_nodes(pg, "a"), "href")
 unlinks <- unlist(links, use.names = FALSE)
 links.df <- data.frame(unlinks)
 linksTF <- (menuTF = logical())
 
-for (i in 1:nrow(links.df)) {
-  T_F <- grepl("/menu/", unlinks[i])
+for (j in 1:nrow(links.df)) {
+  T_F <- grepl("/menu/", unlinks[j])
   linksTF <- c(linksTF, T_F)
   cat("*")
 }
 
 mutate(links.df, menuTF = linksTF) %>%
+  as.data.frame(.,) %>%
   filter(linksTF == TRUE) -> menulinks.df
 
-menulinks.df
+all_menu_links <- c(all_menu_links, menulinks.df)
+
+}
+
+str(all_menu_links)
+all_menu_links$unlinks -> totalLinks
+totalLinks
+
+linksFinal <- data.frame(character())
+
+for (k in totalLinks) {
+  
+  ifelse(is.na(totalLinks[k]), print("All done"), paste0("https://www.allmenus.com/", totalLinks[k]) ) -> temp1
+  
+  gsub(" ", "", temp1, fixed = TRUE) -> temp2
+  
+  linksFinal <- c(linksFinal, temp1)
+  
+}
+
+
+
 ```
 
 ### scrape the menu items from the menu page
