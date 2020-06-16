@@ -48,16 +48,16 @@ set.seed(42)
 
 ```{r}
 #confirm you've removed the CRAN version of ("ggmap") '2.6.1'. via 
-remove.packages("ggmap")
+#remove.packages("ggmap")
 #once removed you will also need to confirm the removal of ("tibble") using the above method.
-remove.packages("tibble")
-devtools::install_github("dkahle/ggmap", ref = "tidyup")
+#remove.packages("tibble")
+#devtools::install_github("dkahle/ggmap", ref = "tidyup")
 #you will be prompted to install tibble, select 'Y'
 #Install should begin
 #if asked "Do you want to install from sources the package which needs compilation?" select no
 #install.packages("devtools")
 #devtools::install_github("dkahle/ggmap")
-
+#install.packages("ggmap")
 #if(!requireNamespace("devtools")) install.packages("devtools")
 #devtools::install_github("dkahle/ggmap")
 #
@@ -81,8 +81,8 @@ Manchester, NH, 03101")
 
 #using top ten most populous cities in New England
 
-state.city <- data.frame(state = c('ma', 'ma', 'ri', 'ma', 'ct', 'ct', 'ct', 'ct', 'ct', 'nh'), 
-                         city = c('boston','worcester', 'providence', 'springfield', 'bridgeport', 'new-haven', 'hartford', 'stamford', 'waterbury', 'manchester')
+state.city <- data.frame(state = c('ma', 'ma', 'ri', 'ct', 'ct', 'ct', 'ct', 'nh'), 
+                         city = c('boston','worcester', 'providence', 'bridgeport', 'new-haven', 'hartford', 'stamford', 'manchester')
                          ) %>% 
   expand_grid(., data.frame(type = c('seafood')))
 
@@ -94,11 +94,11 @@ urlallmenu <- paste0("https://www.allmenus.com/", state.city$state, "/", state.c
 
 
 ```{r}
-### Run each URL through scraping machine and combine everything into one data.frame
+### Scrape restaurant names
 
 fullset_allmenu_names <- data.frame(name = character())
 
-for (i in 1:10) {
+for (i in 1:8) {
 
 allmenu_html <- read_html(urlallmenu[i])
 
@@ -135,10 +135,10 @@ fullset_allmenu_names
 ```{r}
 # Scrape menu links from a city page
 all_menu_links <- data.frame(character())
-for (i in 1:10) {
+for (i in 1:8) {
 
 allmenu_html <- read_html(urlallmenu[i])
-
+#allmenu_html <- read_html("https://www.allmenus.com/nh/manchester/")
 print(urlallmenu[i])
 
 #URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
@@ -159,29 +159,35 @@ for (j in 1:nrow(links.df)) {
 mutate(links.df, menuTF = linksTF) %>%
   as.data.frame(.,) %>%
   filter(linksTF == TRUE) -> menulinks.df
+for (m in menulinks.df) {
+  
+  just_link <- strsplit(as.character(menulinks.df$unlinks[m])," ")
+  all_menu_links <- c(all_menu_links, just_link)
+  
+}
 
-all_menu_links <- c(all_menu_links, menulinks.df)
 
 }
 
-str(all_menu_links)
-all_menu_links$unlinks -> totalLinks
-totalLinks
+#str(all_menu_links)
+unlist(all_menu_links) %>% na.omit(.) -> totalLinks
+as.data.frame(totalLinks) -> totalLinks
+nrow(totalLinks) -> knumber
 
-linksFinal <- data.frame(character())
+linksFinal <- list(character())
 
-for (k in totalLinks) {
+for (i in 1:knumber) {
   
-  ifelse(is.na(totalLinks[k]), print("All done"), paste0("https://www.allmenus.com/", totalLinks[k]) ) -> temp1
+  paste0("https://www.allmenus.com/", totalLinks[i,]) -> temp1
   
-  gsub(" ", "", temp1, fixed = TRUE) -> temp2
   
   linksFinal <- c(linksFinal, temp1)
   
 }
 
+linksFinal %>% unlist(.) %>% as.data.frame(.) -> linksFinal.df
 
-
+linksFinal.df
 ```
 
 ### scrape the menu items from the menu page
@@ -218,30 +224,11 @@ test2addcleanfinal <- str_replace_all(test2addclean, "   " , "")
 Goal is a dataframe that lists every restaurant with city, state, name, address, url to menu 
 
 ```{r}
-#Start with iterator to produce urls for each city on allmenus
-
-#using top ten most populous cities in New England
-
-state.city <- data.frame(state = c('ma', 'ma', 'ri', 'ma', 'ct', 'ct', 'ct', 'ct', 'ct', 'nh'), 
-                         city = c('boston','worcester', 'providence', 'springfield', 'bridgeport', 'new-haven', 'hartford', 'stamford', 'waterbury', 'manchester')
-                         ) %>% 
-  expand_grid(., data.frame(type = c('seafood')))
-
-urlallmenu <- paste0("https://www.allmenus.com/", state.city$state, "/", state.city$city, "/-/", state.city$type, "/")
-
-
-
-                ######################################################################################
-
-
-
+#build a master data frame
 
 fullset_allmenu_names <- data.frame(name = character())
-   fullset_menu_links <- data.frame(name = character())
-   allLinks <- data.frame(character())
 
-for (i in 1:10) {
-  
+for (i in 1:8) {
 
 allmenu_html <- read_html(urlallmenu[i])
 
@@ -253,8 +240,6 @@ number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , 
 
 number.titles
 
-
-
 allmenu_names <- data.frame(name = character())
 
 for (i in 1:number.titles) {
@@ -264,39 +249,15 @@ html_node(allmenu_html, paste0(".clearfix:nth-child(", i, ") a") ) %>%
     unlist() -> temp
 
   c(allmenu_names, temp) -> allmenu_names
-  
-
-
-
-
-  
 }
-
-links <- html_attr(html_nodes(allmenu_html, "a"), "href")
-allLinks <- c(allLinks, links)
-
-unlinks <- unlist(allLinks, use.names = FALSE)
-links.df <- data.frame(unlinks)
-linksTF <- (menuTF = logical())
-
-for (i in 1:nrow(links.df)) {
-  T_F <- grepl("/menu/", unlinks[i])
-  linksTF <- c(linksTF, T_F)
-}
-
-
-
-}
-   
-mutate(links.df, menuTF = linksTF) %>%
-  filter(linksTF == TRUE) -> menulinks.df
-
-fullset_menu_links <- c(fullset_menu_links, menulinks.df)
 
 fullset_allmenu_names <- c(fullset_allmenu_names, allmenu_names)
 
+}
+
+fullset_allmenu_names <- data.frame( na.omit(unlist(fullset_allmenu_names) ) )
+
 fullset_allmenu_names
-fullset_menu_links
 
 ```
 
