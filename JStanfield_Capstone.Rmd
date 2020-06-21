@@ -127,6 +127,7 @@ fullset_allmenu_names <- c(fullset_allmenu_names, allmenu_names)
 
 fullset_allmenu_names <- data.frame( na.omit(unlist(fullset_allmenu_names) ) )
 
+dplyr::filter(fullset_allmenu_names, na.omit.unlist.fullset_allmenu_names..!="Clear all") -> fullset_allmenu_names
 fullset_allmenu_names
 ```
 
@@ -187,7 +188,7 @@ for (i in 1:knumber) {
 
 linksFinal %>% unlist(.) %>% as.data.frame(.) -> linksFinal.df
 
-linksFinal.df
+distinct(linksFinal.df)
 ```
 
 ### scrape the menu items from the menu page
