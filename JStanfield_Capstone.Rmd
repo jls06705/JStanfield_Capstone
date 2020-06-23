@@ -89,6 +89,9 @@ state.city <- data.frame(state = c('ma', 'ma', 'ri', 'ct', 'ct', 'ct', 'ct', 'nh
 urlallmenu <- paste0("https://www.allmenus.com/", state.city$state, "/", state.city$city, "/-/", state.city$type, "/")
 
 
+data.frame("urls" = urlallmenu) -> urlallmenu
+as.character(urlallmenu$urls) -> urlallmenu$urls
+urlallmenu
 ```
 
 
@@ -98,9 +101,13 @@ urlallmenu <- paste0("https://www.allmenus.com/", state.city$state, "/", state.c
 
 fullset_allmenu_names <- data.frame(name = character())
 
-for (i in 1:8) {
+for (i in 1:nrow(urlallmenu)) {
 
-allmenu_html <- read_html(urlallmenu[i])
+thisurl <- character()
+  
+thisurl <- as.character(urlallmenu$urls[i])
+  
+allmenu_html <- read_html(thisurl)
 
 allmenu_number <- html_node(allmenu_html, "h1")
 
@@ -136,11 +143,14 @@ fullset_allmenu_names
 ```{r}
 # Scrape menu links from a city page
 all_menu_links <- data.frame(character())
-for (i in 1:8) {
+for (i in 1:nrow(urlallmenu)) {
 
-allmenu_html <- read_html(urlallmenu[i])
+thisurl <- character()
+  
+thisurl <- as.character(urlallmenu$urls[i])
+allmenu_html <- read_html(thisurl)
 #allmenu_html <- read_html("https://www.allmenus.com/nh/manchester/")
-print(urlallmenu[i])
+print(urlallmenu$urls[i])
 
 #URL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
 
@@ -193,7 +203,7 @@ distinct(linksFinal.df)
 
 
 
-#Combine Name and URL scrapers
+#Combine Name and URL scrapers for a single page
 ```{r}
 ### Scrape restaurant names
 
@@ -278,12 +288,107 @@ distinct(linksFinal.df)
 
 combined_data <- data.frame(names = allmenu_names_final, res_links = linksFinal.df)
 combined_data
+
 ```
 
 
 
 
+#Iterate Combined Name and URL scraper for multiple pages
+```{r}
+### Scrape restaurant names
+i=1
+for (i in 1:8) {
+    testi <-i
+allmenu_html <- read_html(urlallmenu$urls[i])
 
+#url <- "https://www.allmenus.com/nh/manchester/-/seafood/"
+
+#allmenu_html <- read_html(url)
+
+allmenu_number <- html_node(allmenu_html, "h1")
+
+number_text <- html_text(allmenu_number)
+
+number.titles <- as.numeric(substr(head(str_replace_all(number_text, "[\r\n]" , "")), 2, 3))
+
+number.titles
+
+allmenu_names <- data.frame(name = character())
+
+j=1
+for (j in 1:number.titles) {
+      testj <- j
+html_node(allmenu_html, paste0(".clearfix:nth-child(", j, ") .name a") ) %>%
+    html_text() %>%
+    unlist() -> temp
+
+  c(allmenu_names, temp) -> allmenu_names
+}
+
+unlist(allmenu_names) -> allmenu_names_final
+allmenu_names_final
+
+
+# Scrape menu links from a city page
+
+all_menu_links <- data.frame(character())
+
+allmenu_html <- read_html(url)
+
+pg <- allmenu_html
+
+links <- html_attr(html_nodes(pg, "a"), "href")
+unlinks <- unlist(links, use.names = FALSE)
+links.df <- data.frame(unlinks)
+linksTF <- (menuTF = logical())
+
+j=1
+for (j in 1:nrow(links.df)) {
+  T_F <- grepl("/menu/", unlinks[j])
+  linksTF <- c(linksTF, T_F)
+  cat("*")
+}
+
+mutate(links.df, menuTF = linksTF) %>%
+  as.data.frame(.,) %>%
+  filter(linksTF == TRUE) -> menulinks.df
+
+m=1
+for (m in menulinks.df) {
+  
+  just_link <- strsplit(as.character(menulinks.df$unlinks[m])," ")
+  all_menu_links <- c(all_menu_links, just_link)
+  
+}
+
+
+
+
+#str(all_menu_links)
+unlist(all_menu_links) %>% na.omit(.) -> totalLinks
+as.data.frame(totalLinks) -> totalLinks
+nrow(totalLinks) -> knumber
+
+linksFinal <- list(character())
+
+for (i in 1:knumber) {
+  
+  paste0("https://www.allmenus.com/", totalLinks[i,]) -> temp1
+  
+  
+  linksFinal <- c(linksFinal, temp1)
+  
+}
+
+linksFinal %>% unlist(.) %>% as.data.frame(.) -> linksFinal.df
+
+distinct(linksFinal.df)
+
+combined_data <- data.frame(names = allmenu_names_final, res_links = linksFinal.df)
+combined_data
+}
+```
 
 
 
@@ -300,9 +405,11 @@ test <- html_nodes(menuURL_html, css = ".item-title")
 test2 <- html_text(test)
 test2
 
-
+#use topic extraction algorithm
+#matrix of restaurants vs items
 
 ```
+
 
 ```{r}
 addressURL <- "https://www.allmenus.com/nh/manchester/-/seafood/"
