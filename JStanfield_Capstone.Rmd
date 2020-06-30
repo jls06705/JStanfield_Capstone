@@ -397,17 +397,46 @@ combined_data
 ### scrape the menu items from the menu page
 
 ```{r}
-menuURL <- "https://www.allmenus.com/nh/manchester/39823-commercial-street-fishery/menu/"
+menuURL1 <- "https://www.allmenus.com/nh/manchester/39823-commercial-street-fishery/menu/"
+menuURL2 <- "https://www.allmenus.com/ma/boston/338453-harborside-grill-and-patio/menu/"
+menuURL3 <- "https://www.allmenus.com/ma/boston/1422-the-tap/menu/"
 
-menuURL_html <- read_html(menuURL)
+menuURL_html1 <- read_html(menuURL1)
+menuURL_html2 <- read_html(menuURL2)
+menuURL_html3 <- read_html(menuURL3)
 
-test <- html_nodes(menuURL_html, css = ".item-title")
+test <- html_nodes(menuURL_html1, css = ".item-title")
+test1 <- html_text(test)
+
+test <- html_nodes(menuURL_html2, css = ".item-title")
 test2 <- html_text(test)
-test2
 
+test <- html_nodes(menuURL_html3, css = ".item-title")
+test3 <- html_text(test)
+
+test_combine <- c(test1, test2, test3)
+
+str(test_combine)
+  
 #use topic extraction algorithm
 #matrix of restaurants vs items
 
+```
+
+#Topic analysis fo menu items
+
+```{r}
+#install.packages("udpipe")
+library(udpipe)
+
+#en <- udpipe::udpipe_download_model("english")
+
+doc_df <- as.data.frame(test_combine)
+
+topics <- keywords_rake(x = doc_df, term = "test_combine", group = "test_combine",
+                          relevant = doc_df$test_combine)
+
+topics
 ```
 
 
