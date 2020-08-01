@@ -1,0 +1,962 @@
+---
+title: "shiny tutorial"
+author: "James Stanfield"
+date: "7/26/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(shiny)
+```
+
+
+# Basics of building a shiny app
+
+Template - blank app
+```{r}
+library(shiny)
+ui <- fluidPage()
+
+server <- function(input, output) {}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+Print "Hello World" inside app
+```{r}
+library(shiny)
+ui <- fluidPage("Hello World")
+
+server <- function(input, output) {}
+
+shinyApp(ui = ui, server = server)
+```
+
+Input a number slider
+```{r}
+library(shiny)
+ui <- fluidPage(
+  sliderInput(inputId = "num",
+              label = "Choose a number",
+              value = 25, min = 1, max = 100)
+)
+
+server <- function(input, output) {}
+
+shinyApp(ui = ui, server = server)
+```
+
+List of some other inputs:
+```{r}
+actionButton()
+submitButton()
+
+checkboxInput()
+checkboxGroupInput()
+
+dateInput()
+dateRangeInput()
+
+fileInput()
+
+numericInput()
+
+passwordInput()
+
+radioButtons()
+
+selectInput()
+
+sliderInput()
+
+textInput()
+```
+
+
+Input syntax
+```{r}
+#typeofInput(inputId = "unique name of input", label = "label of input seen by user", specific arguments)
+
+#example:
+
+sliderInput(inputId = "num", label = "Choose a number", value = 25, min = 1, max = 100)
+```
+
+Some types of outputs:
+```{r}
+dataTableOutput()
+htmlOutput()
+imageOutput()
+plotOutput()
+tableOutput()
+textOutput()
+uiOutput()
+verbatimTextOutput()
+```
+
+syntax for output
+```{r}
+#typeofOutput(outputId = "unique name of output object")
+
+#ex.
+
+plotOutput(outputId = "hist")
+```
+
+Add an output command
+```{r}
+library(shiny)
+ui <- fluidPage(
+  sliderInput(inputId = "num",
+              label = "Choose a number",
+              value = 25, min = 1, max = 100),
+  plotOutput("hist") #tells shiny to make space for a plot, but not enough for any display on its own
+)
+
+server <- function(input, output) {}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+Rules for using server to make convert inputs to outputs
+```{r}
+server <- function(input, output) {
+  output$hist <- #code                1: save objects to display to output$
+  output$hist <- renderPlot({code}) # 2: Build objects to display with render*()
+  input$num                         # 3: Use input values with input$
+}
+
+#syntax example
+
+server <- function(input, output) {
+  ouput$hist <- renderPlot({
+    hist(rnorm(input$num))
+  })
+}
+```
+
+List of some render functions:
+```{r}
+renderDataTable()
+renderImage()
+renderPlot()
+renderPrint()
+renderTable()
+renderText()
+renderUI()
+```
+
+Combine input with output
+```{r}
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num))
+  })
+}
+
+shinyApp(ui = ui, server = server) 
+```
+
+share apps with
+https://www.shinyapps.io/ #make account
+https://shiny.rstudio.com/articles/shinyapps.html #post apps on rstudio
+
+https://rstudio.com/products/shiny/shiny-server/  #make own server for apps
+
+
+# Reactivity
+
+1st reactive function
+```{r}
+#render functions
+
+renderDataTable()
+renderImage()
+renderPlot()
+renderPrint()
+renderTable()
+renderText()
+renderUI()
+```
+
+
+```{r}
+# 01-two-inputs
+
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  textInput(inputId = "title", 
+    label = "Write a title",
+    value = "Histogram of Random Normal Values"),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num), main = input$title)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# 02-two-outputs
+
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  plotOutput("hist"),
+  verbatimTextOutput("stats")
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num))
+  })
+  output$stats <- renderPrint({
+    summary(rnorm(input$num))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+2nd function
+```{r}
+#reactive() 
+
+data <- reactive( {rnorm(input$num)} )
+
+#will cause object to respond to every reactive value in the code
+
+# 1: call a reactive expression like a function i.e. data()
+
+# 2: Reactive expressions cache their values, returning the most recent value unless it has become invalidated.
+```
+
+The power of reactive is you can run a process data once, and then use the saved value(s) for any number of outputs.
+So when you have multiple outputs, place as much in reactive() as you can in order to streamline both the coding and computation time.
+
+```{r}
+# 03-reactive
+
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  plotOutput("hist"),
+  verbatimTextOutput("stats")
+)
+
+server <- function(input, output) {
+  
+  data <- reactive({
+    rnorm(input$num)
+  })
+  
+  output$hist <- renderPlot({
+    hist(data())
+  })
+  output$stats <- renderPrint({
+    summary(data())
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+3rd function
+```{r}
+# isolate()
+
+isolate({ rnorm(input$num) })
+
+# returns the result as a non-reactive value
+```
+
+```{r}
+# 04-isolate
+
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  textInput(inputId = "title", 
+    label = "Write a title",
+    value = "Histogram of Random Normal Values"),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num), main = isolate(input$title))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+4th function
+```{r}
+#observeEvent(reactive values to respond to, { code block to run whenever observer is invalidated })
+                                                  #note: code block treated as if it is isolated
+
+observeEvent(input$clicks, { print(input$clicks) })
+```
+
+```{r}
+actionButton(inputId = "go", label = "Click Me!")
+```
+
+```{r}
+# 05-actionButton/observeEvent
+
+library(shiny)
+
+ui <- fluidPage(
+  actionButton(inputId = "clicks", 
+    label = "Click me")
+)
+
+server <- function(input, output) {
+  observeEvent(input$clicks, {
+    print(as.numeric(input$clicks))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# 06-observeEvent
+
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number",
+    min = 1, max = 100, value = 25),
+  actionButton(inputId = "go", 
+    label = "Print Value")
+)
+
+server <- function(input, output) {
+  
+  # observe responds to the print button
+  # but not the slider
+  observeEvent(input$go, {
+    print(as.numeric(input$num))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+5th function
+```{r}
+#observe()
+
+#observe({code block to run whenever observer is invalidated})
+
+observe( { print(input$clicks) } )
+
+#also triggers code to run on server.
+#same syntax as render, reactive, and isolate
+#will respoond to every reactive value
+```
+
+
+6th function
+```{r}
+# eventReactive()
+
+# data <- eventReactive(reactive value(s) to respond to, { code used to build object })
+                                                          #note: object code treated as isolated
+
+data <- eventReactive(input$go, {rnorm(input$num)})
+
+# Delays reactions
+# update buttons
+```
+
+```{r}
+# 07-eventReactive
+
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  actionButton(inputId = "go", 
+    label = "Update"),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+  data <- eventReactive(input$go, {
+    rnorm(input$num) 
+  })
+  
+  output$hist <- renderPlot({
+    hist(data())
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+7th function
+```{r}
+# reactiveValues()
+
+# rv <- reactiveValues(optional elements to add to the list)
+
+rv <- reactiveValues(data = rnorm(100))
+
+# Creates list of reactive values to manipulate programmatically
+```
+
+```{r}
+# 08-reactiveValues
+
+library(shiny)
+
+ui <- fluidPage(
+  actionButton(inputId = "norm", label = "Normal"),
+  actionButton(inputId = "unif", label = "Uniform"),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+
+  rv <- reactiveValues(data = rnorm(100))
+
+  observeEvent(input$norm, { rv$data <- rnorm(100) })
+  observeEvent(input$unif, { rv$data <- runif(100) })
+
+  output$hist <- renderPlot({ 
+    hist(rv$data) 
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+Code outside server function will only be run once per session. Maximize code here
+
+Code inside server function will be run once per user. Bridge between Max and Min.
+
+Code inside a reactive function will be run every time the app is interacted with. Minimize code here
+
+
+Interesting article about rshiny reactivity:
+https://shiny.rstudio.com/articles/understanding-reactivity.html 
+
+
+# Customize Appearance
+
+Tags
+```{r}
+# tags$h1()  same as html <h1></h1>
+# tags$a()   same as html <a></a>
+```
+
+```{r}
+library(shiny)
+names(tags) #run to get list
+```
+
+Be sure to follow tags$h1 with (), or you will just get a function description
+
+```{r}
+tags$h1
+tags$h1()
+```
+
+Tags syntax
+```{r}
+#listy of names tags$function/tag name(name = arguments, unnamed arguments)
+#   Note: named arguments appear as tag attributes, unnamed arguments appear inside the tag
+
+tags$a(href = "www.rstudio.com", "Rstudio")
+
+#html:  <a href = "www.rstudio.com">Rstudio</a>
+```
+
+Headers
+```{r}
+fluidPage(
+  tags$h1("First level"),
+  tags$h2("Second level"),
+  tags$h3("Third level"),
+  tags$h4("Fourth level"),
+  tags$h5("Fifth level"),
+  tags$h6("Sixth level")
+)
+```
+
+hyperlink
+```{r}
+fluidPage(
+tags$a(href = "http://www.git.com", "Git")
+)
+```
+
+text
+```{r}
+fluidPage(
+  "This is a Shiny app.",
+  "It is also a web page."
+)
+```
+
+paragraphs
+```{r}
+fluidPage(
+  tags$p("This is a Shiny app."),
+  tags$p("It is also a web page.")
+)
+```
+
+Italic and Bold, etc.
+```{r}
+fluidPage(
+  tags$em("I'm italicized!"),
+  tags$strong("I'm Bold!"),
+  tags$code("I look like code!")
+)
+```
+
+Nest style tags
+```{r}
+fluidPage(
+  tags$p("This is a", tags$strong("Shiny"), "app.")
+)
+```
+
+line break
+```{r}
+fluidPage(
+  "This is a Shiny app.",
+  tags$br(),
+  "It is also a web page."
+)
+```
+
+Horizontal rule
+```{r}
+fluidPage(
+  "This is a Shiny app.",
+  tags$hr(),
+  "It is also a web page."
+)
+```
+
+Insert images
+```{r}
+fluidPage(
+  tags$img(
+    height = 100,
+    src = "http://www.rstudio.com/images/Rstudio.2x.png" #src = source of image
+  )
+)
+```
+
+add images from own system
+```{r}
+#create folder inside the same folder as the app, and call it www and place desired images in that folder
+
+fluidPage(
+  tags$img(
+    height = 100,
+    src = "bigorb.png" #r will pull from the www folder, so only include the name of the image, w/subdirectory if needed
+  )
+)
+```
+
+can use html
+```{r}
+HTML('HTML code')
+```
+
+break app into rows
+```{r}
+fluidPage(
+  fluidRow(),
+  fluidRow()
+)
+```
+
+column
+```{r}
+column(width = , offset = ) #there are 12 units across to assign
+#place inside of rows
+```
+
+```{r}
+# 02-tags.R
+
+library(shiny)
+
+ui <- fluidPage(
+  h1("My Shiny App"),
+  p(style = "font-family:Impact",
+    "See other apps in the",
+    a("Shiny Showcase",
+      href = "http://www.rstudio.com/
+      products/shiny/shiny-user-showcase/")
+  )
+)
+
+server <- function(input, output){}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# 03-layout.R
+
+library(shiny)
+
+ui <- fluidPage(
+  fluidRow(
+   column(3),
+   column(5, sliderInput(inputId = "num", 
+     label = "Choose a number", 
+     value = 25, min = 1, max = 100))
+  ),
+  fluidRow(
+    column(4, offset = 8,
+      plotOutput("hist")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# 04-well.R
+
+library(shiny)
+
+ui <- fluidPage(
+  wellPanel(
+    sliderInput(inputId = "num", 
+      label = "Choose a number", 
+      value = 25, min = 1, max = 100),
+    textInput(inputId = "title", 
+      label = "Write a title",
+      value = "Histogram of Random Normal Values")
+  ),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num), main = input$title)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# 05-tabs.R
+
+library(shiny)
+
+ui <- fluidPage(title = "Random generator",
+  tabsetPanel(              
+    tabPanel(title = "Normal data",
+      plotOutput("norm"),
+      actionButton("renorm", "Resample")
+    ),
+    tabPanel(title = "Uniform data",
+      plotOutput("unif"),
+      actionButton("reunif", "Resample")
+    ),
+    tabPanel(title = "Chi Squared data",
+      plotOutput("chisq"),
+      actionButton("rechisq", "Resample")
+    )
+  )
+)
+
+server <- function(input, output) {
+  
+  rv <- reactiveValues(
+    norm = rnorm(500), 
+    unif = runif(500),
+    chisq = rchisq(500, 2))
+  
+  observeEvent(input$renorm, { rv$norm <- rnorm(500) })
+  observeEvent(input$reunif, { rv$unif <- runif(500) })
+  observeEvent(input$rechisq, { rv$chisq <- rchisq(500, 2) })
+  
+  output$norm <- renderPlot({
+    hist(rv$norm, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard normal distribution")
+  })
+  output$unif <- renderPlot({
+    hist(rv$unif, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard uniform distribution")
+  })
+  output$chisq <- renderPlot({
+    hist(rv$chisq, breaks = 30, col = "grey", border = "white",
+       main = "500 random draws from a Chi Square distribution with two degree of freedom")
+  })
+}
+
+shinyApp(server = server, ui = ui)
+#© 2020 GitHub, Inc.
+```
+
+```{r}
+# 06-navlist.R
+
+library(shiny)
+
+ui <- fluidPage(title = "Random generator",
+  navlistPanel(              
+    tabPanel(title = "Normal data",
+      plotOutput("norm"),
+      actionButton("renorm", "Resample")
+    ),
+    tabPanel(title = "Uniform data",
+      plotOutput("unif"),
+      actionButton("reunif", "Resample")
+    ),
+    tabPanel(title = "Chi Squared data",
+      plotOutput("chisq"),
+      actionButton("rechisq", "Resample")
+    )
+  )
+)
+
+server <- function(input, output) {
+  
+  rv <- reactiveValues(
+    norm = rnorm(500), 
+    unif = runif(500),
+    chisq = rchisq(500, 2))
+  
+  observeEvent(input$renorm, { rv$norm <- rnorm(500) })
+  observeEvent(input$reunif, { rv$unif <- runif(500) })
+  observeEvent(input$rechisq, { rv$chisq <- rchisq(500, 2) })
+  
+  output$norm <- renderPlot({
+    hist(rv$norm, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard normal distribution")
+  })
+  output$unif <- renderPlot({
+    hist(rv$unif, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard uniform distribution")
+  })
+  output$chisq <- renderPlot({
+    hist(rv$chisq, breaks = 30, col = "grey", border = "white",
+       main = "500 random draws from a Chi Square distribution with two degree of freedom")
+  })
+}
+
+shinyApp(server = server, ui = ui)
+```
+
+```{r}
+# 07-Sidebar.R
+
+library(shiny)
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput(inputId = "num", 
+        label = "Choose a number", 
+        value = 25, min = 1, max = 100),
+      textInput(inputId = "title", 
+        label = "Write a title",
+        value = "Histogram of Random Normal Values")
+    ),
+    mainPanel(
+      plotOutput("hist")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$num), main = input$title)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# 08-navbarPage.R
+
+library(shiny)
+
+ui <- navbarPage(title = "Random generator",
+    tabPanel(title = "Normal data",
+      plotOutput("norm"),
+      actionButton("renorm", "Resample")
+    ),
+    tabPanel(title = "Uniform data",
+      plotOutput("unif"),
+      actionButton("reunif", "Resample")
+    ),
+    tabPanel(title = "Chi Squared data",
+      plotOutput("chisq"),
+      actionButton("rechisq", "Resample")
+    )
+
+)
+
+server <- function(input, output) {
+  
+  rv <- reactiveValues(
+    norm = rnorm(500), 
+    unif = runif(500),
+    chisq = rchisq(500, 2))
+  
+  observeEvent(input$renorm, { rv$norm <- rnorm(500) })
+  observeEvent(input$reunif, { rv$unif <- runif(500) })
+  observeEvent(input$rechisq, { rv$chisq <- rchisq(500, 2) })
+  
+  output$norm <- renderPlot({
+    hist(rv$norm, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard normal distribution")
+  })
+  output$unif <- renderPlot({
+    hist(rv$unif, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard uniform distribution")
+  })
+  output$chisq <- renderPlot({
+    hist(rv$chisq, breaks = 30, col = "grey", border = "white",
+       main = "500 random draws from a Chi Square distribution with two degree of freedom")
+  })
+}
+
+shinyApp(server = server, ui = ui)
+```
+
+```{r}
+# 09-navbarMenu.R
+
+library(shiny)
+
+ui <- navbarPage(title = "Random generator",
+  tabPanel(title = "Normal data",
+    plotOutput("norm"),
+    actionButton("renorm", "Resample")
+  ),
+  navbarMenu(title = "Other data",
+    tabPanel(title = "Uniform data",
+      plotOutput("unif"),
+      actionButton("reunif", "Resample")
+    ),
+    tabPanel(title = "Chi Squared data",
+      plotOutput("chisq"),
+      actionButton("rechisq", "Resample")
+    )
+  )
+)
+
+server <- function(input, output) {
+  
+  rv <- reactiveValues(
+    norm = rnorm(500), 
+    unif = runif(500),
+    chisq = rchisq(500, 2))
+  
+  observeEvent(input$renorm, { rv$norm <- rnorm(500) })
+  observeEvent(input$reunif, { rv$unif <- runif(500) })
+  observeEvent(input$rechisq, { rv$chisq <- rchisq(500, 2) })
+  
+  output$norm <- renderPlot({
+    hist(rv$norm, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard normal distribution")
+  })
+  output$unif <- renderPlot({
+    hist(rv$unif, breaks = 30, col = "grey", border = "white",
+      main = "500 random draws from a standard uniform distribution")
+  })
+  output$chisq <- renderPlot({
+    hist(rv$chisq, breaks = 30, col = "grey", border = "white",
+       main = "500 random draws from a Chi Square distribution with two degree of freedom")
+  })
+}
+
+shinyApp(server = server, ui = ui)
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
