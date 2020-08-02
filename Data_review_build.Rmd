@@ -1,0 +1,109 @@
+---
+title: "Data review build"
+author: "James Stanfield"
+date: "8/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+c("data.table",
+  "ggplot2",
+  "here",
+  "lubridate",     # Excellent for manipulating and converting to and from 'date' data
+  "tidyverse",     # For data manipulation
+  "lattice",       # xyplot to look for effect of groups
+  "dtplyr",        # Pipes (%>%), mutate, etc.
+  "car",           # scatterplot
+  "plotly",        # For 3-d and interactive plots
+  "stringr",       # Data cleaning and prep
+  "ggQC"
+  ) -> package_names
+for(package_name in package_names) {
+  if(!is.element(package_name, installed.packages()[,1])) {
+     install.packages(package_name,
+                      repos = "http://cran.mtu.edu/")
+  }
+  library(package_name, character.only=TRUE,
+          quietly=TRUE,verbose=FALSE)
+}
+
+rm(list=c("package_name", "package_names")) # clean up the environment
+
+options(show.signif.stars = FALSE)  # Don't confuse significance & effect size!
+
+set_here()  # So that this works anywhere
+
+set.seed(42)
+```
+
+```{r}
+redwine <- fread("C:\\Users\\Richard\\Documents\\Data Science\\Capstone\\JStanfield_Capstone\\red_wine.csv")
+
+redwine$row_num <- seq.int(nrow(redwine))
+
+head(redwine)
+```
+
+```{r}
+summary(redwine)
+```
+
+```{r}
+Cpk(4.50, 17.00, mean(redwine$fixed_acidity), sd(redwine$fixed_acidity))
+```
+
+```{r}
+Cp(4.50, 17.00, sd(redwine$fixed_acidity))
+```
+
+```{r}
+INDV <- ggplot(redwine, aes(x = row_num, y=fixed_acidity)) +
+       geom_point() + geom_line() +
+       ggtitle("XmR", "geom_point() and geom_line() required") + 
+       ylim(-4,16) + #make scales same
+       scale_x_continuous(expand =  expand_scale(mult = .15)) + #pad x-axis
+       stat_QC(method="XmR", auto.label = T) +
+         ggtitle("XmR", subtitle = "Auto Label QC lines")
+
+plot(INDV)
+```
+
+
+```{r}
+CapabilityAnaylsis <- 
+ ggplot(redwine, aes(x = fixed_acidity)) + #init ggplot
+  geom_histogram(binwidth = .75, color="purple") + #make the histogram
+  stat_QC_Capability(
+    LSL=4.50, USL=17.00,                    #Specify LSL and USL
+    show.cap.summary = c("Cp", "Cpk"), #selected summary
+    digits = 2,                        #report two digits
+    method="XmR") +                    #Use the XmR method
+scale_x_continuous(expand =  expand_scale(mult = c(0.15,.65))) #pad the X-axis 
+CapabilityAnaylsis  #plot the graph
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
