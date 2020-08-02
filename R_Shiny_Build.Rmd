@@ -1,0 +1,151 @@
+---
+title: "R Shiny build"
+author: "James Stanfield"
+date: "8/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+c("data.table",
+  "ggplot2",
+  "here",
+  "lubridate",     # Excellent for manipulating and converting to and from 'date' data
+  "tidyverse",     # For data manipulation
+  "lattice",       # xyplot to look for effect of groups
+  "dtplyr",        # Pipes (%>%), mutate, etc.
+  "car",           # scatterplot
+  "shiny",         # r shiny apps
+  "plotly",        # For 3-d and interactive plots
+  "stringr",       # Data cleaning and prep
+  "ggQC"
+  ) -> package_names
+for(package_name in package_names) {
+  if(!is.element(package_name, installed.packages()[,1])) {
+     install.packages(package_name,
+                      repos = "http://cran.mtu.edu/")
+  }
+  library(package_name, character.only=TRUE,
+          quietly=TRUE,verbose=FALSE)
+}
+
+rm(list=c("package_name", "package_names")) # clean up the environment
+
+options(show.signif.stars = FALSE)  # Don't confuse significance & effect size!
+
+set_here()  # So that this works anywhere
+
+set.seed(42)
+```
+
+```{r Will call for file upload w/ browse}
+library(shiny)
+ui <- fluidPage(
+  fileInput(inputId = "product",
+              label = "Choose a file")
+)
+
+server <- function(input, output) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+library(shiny)
+
+ui <- fluidPage(
+  fileInput(inputId = "product",
+              label = "Choose a file"),
+  tableOutput("table")
+)
+
+server <- function(input, output) {
+  output$table <- renderTable({
+    head(
+      read.csv(input$product)
+    )
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+if (interactive()) {
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      fileInput("file1", "Choose CSV File",
+        accept = c(
+          "text/csv",
+          "text/comma-separated-values,text/plain",
+          ".csv")
+        ),
+      tags$hr(),
+      checkboxInput("header", "Header", TRUE)
+    ),
+    mainPanel(
+      tableOutput("contents"),
+      plotOutput("hist")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$contents <- renderTable({
+    # input$file1 will be NULL initially. After the user selects
+    # and uploads a file, it will be a data frame with 'name',
+    # 'size', 'type', and 'datapath' columns. The 'datapath'
+    # column will contain the local filenames where the data can
+    # be found.
+    inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+
+    fread(inFile$datapath, header = input$header) -> tempDf
+    head(tempDf)
+  })
+  output$hist <- renderPlot({
+    
+    inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+    
+    fread(inFile$datapath, header = input$header) -> tempDf
+    hist(tempDf$fixed_acidity)
+  })
+}
+
+shinyApp(ui, server)
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
