@@ -43,11 +43,13 @@ redwine <- fread("C:\\Users\\Richard\\Documents\\Data Science\\Capstone\\JStanfi
 
 redwine$row_num <- seq.int(nrow(redwine))
 
-head(redwine)
+rw <- redwine[1:60,]
+
+head(rw)
 ```
 
 ```{r}
-summary(redwine)
+summary(rw)
 ```
 
 ```{r}
@@ -59,7 +61,7 @@ Cp(4.50, 17.00, sd(redwine$fixed_acidity))
 ```
 
 ```{r}
-INDV <- ggplot(redwine, aes(x = row_num, y=fixed_acidity)) +
+INDV <- ggplot(rw, aes(x = row_num, y=fixed_acidity)) +
        geom_point() + geom_line() +
        ggtitle("XmR", "geom_point() and geom_line() required") + 
        ylim(-4,16) + #make scales same
@@ -70,25 +72,63 @@ INDV <- ggplot(redwine, aes(x = row_num, y=fixed_acidity)) +
 plot(INDV)
 ```
 
+```{r}
+#convert to plotly
+ggplotly(
+  p = INDV,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+```
+
 
 ```{r}
+UCL= mean(rw$fixed_acidity) + 3*sd(rw$fixed_acidity)
+LCL= mean(rw$fixed_acidity) - 3*sd(rw$fixed_acidity)
+
 CapabilityAnaylsis <- 
- ggplot(redwine, aes(x = fixed_acidity)) + #init ggplot
+ ggplot(rw, aes(x = fixed_acidity)) + #init ggplot
   geom_histogram(binwidth = .75, color="purple") + #make the histogram
   stat_QC_Capability(
     LSL=4.50, USL=17.00,                    #Specify LSL and USL
     show.cap.summary = c("Cp", "Cpk"), #selected summary
     digits = 2,                        #report two digits
     method="XmR") +                    #Use the XmR method
-scale_x_continuous(expand =  expand_scale(mult = c(0.15,.65))) #pad the X-axis 
+scale_x_continuous(expand =  expand_scale(mult = c(0.15,.65)))+ #pad the X-axis
+geom_vline(xintercept=mean(rw$fixed_acidity), colour="grey") +
+  geom_text(aes(x=mean(rw$fixed_acidity)), y = 25, label="mean", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11))
+
+
 CapabilityAnaylsis  #plot the graph
 ```
 
 ```{r}
-
+#build indv in plotly
+pINDV <- plot_ly(rw, x = ~row_num, y = ~fixed_acidity, type = "scatter", mode = "lines")
+pINDV
 ```
 
+```{r}
+#add layers to indv in plotly
 
+UCL= mean(rw$fixed_acidity) + 3*sd(rw$fixed_acidity)
+LCL= mean(rw$fixed_acidity) - 3*sd(rw$fixed_acidity)
+
+pINDV2 <- plot_ly(rw, x = ~row_num, y = ~fixed_acidity, type = "scatter", mode = "lines", showlegend = FALSE) %>%
+  add_segments(x = 0, xend = nrow(rw), y = UCL, yend = UCL, color = "#eeeeee", showlegend = FALSE) %>%
+  add_segments(x = 0, xend = nrow(rw), y = LCL, yend = LCL, color = "#eeeeee", showlegend = FALSE)
+
+pINDV2
+```
+
+add_segments(x = 4, xend = 4, y = 0, yend = 10) %>%
+  add_segments(x = 3, xend = 5, y = 5, yend = 5)
+https://plotly.com/r/text-and-annotations/
 
 
 
