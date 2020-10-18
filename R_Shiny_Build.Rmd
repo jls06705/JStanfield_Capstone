@@ -118,7 +118,142 @@ server <- function(input, output) {
       return(NULL)
     
     fread(inFile$datapath, header = input$header) -> tempDf
-    hist(tempDf$fixed_acidity)
+    
+    tempDf$row_num <- seq.int(nrow(tempDf))
+    
+   # INDV <- ggplot(tempDf, aes(x = row_num, y=fixed_acidity)) +
+    #   geom_point() + geom_line() +
+     #  ggtitle("XmR", "geom_point() and geom_line() required") + 
+      # ylim(-4,16) + #make scales same
+       #scale_x_continuous(expand =  expand_scale(mult = .15)) + #pad x-axis
+      # stat_QC(method="XmR", auto.label = T) +
+       #  ggtitle("XmR", subtitle = "Auto Label QC lines")
+    
+    UCL <- mean(tempDf$fixed_acidity) + 3*sd(tempDf$fixed_acidity)
+    LCL <- mean(tempDf$fixed_acidity) - 3*sd(tempDf$fixed_acidity)
+    
+    INDV <- ggplot(tempDf, aes(row_num, fixed_acidity)) +
+       geom_point() +
+       geom_line() +
+       ggtitle("Fixed Acidity", "Control Chart") + 
+       #ylim(-4,16) + #make scales same
+       scale_x_continuous(expand =  expand_scale(mult = .15)) + #pad x-axis
+       geom_hline(yintercept=UCL, colour="red") +
+       geom_hline(yintercept=LCL, colour="red") +
+  geom_text(aes(x=max(tempDf$row_num)), y = UCL, label="UCL", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11)) +
+  geom_text(aes(x=max(tempDf$row_num)), y = LCL, label="LCL", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11))
+
+ggplotly(
+  p = INDV,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+  })
+}
+
+shinyApp(ui, server)
+}
+```
+Has both Individual and histogram
+```{r}
+if (interactive()) {
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      fileInput("file1", "Choose CSV File",
+        accept = c(
+          "text/csv",
+          "text/comma-separated-values,text/plain",
+          ".csv")
+        ),
+      tags$hr(),
+      checkboxInput("header", "Header", TRUE)
+    ),
+    mainPanel(
+      tableOutput("contents"),
+      plotOutput("hist1"),
+      plotOutput("hist2")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$contents <- renderTable({
+    # input$file1 will be NULL initially. After the user selects
+    # and uploads a file, it will be a data frame with 'name',
+    # 'size', 'type', and 'datapath' columns. The 'datapath'
+    # column will contain the local filenames where the data can
+    # be found.
+    inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+
+    fread(inFile$datapath, header = input$header) -> tempDf
+    head(tempDf)
+  })
+  output$hist1 <- renderPlot({
+    
+    inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+    
+    fread(inFile$datapath, header = input$header) -> tempDf
+    
+    tempDf$row_num <- seq.int(nrow(tempDf))
+    
+   INDV <- ggplot(tempDf, aes(x = row_num, y=fixed_acidity)) +
+    geom_point() + geom_line() +
+      ggtitle("XmR", "geom_point() and geom_line() required") + 
+       ylim(-4,16) + #make scales same
+       scale_x_continuous(expand =  expand_scale(mult = .15)) + #pad x-axis
+      stat_QC(method="XmR", auto.label = T) +
+         ggtitle("XmR", subtitle = "Auto Label QC lines")
+    
+   plot(INDV)
+  })  
+   output$hist2 <- renderPlot({
+     
+     
+     inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+    
+    fread(inFile$datapath, header = input$header) -> tempDf
+    
+    tempDf$row_num <- seq.int(nrow(tempDf))
+     
+   UCL= mean(tempDf$fixed_acidity) + 3*sd(tempDf$fixed_acidity)
+   LCL= mean(tempDf$fixed_acidity) - 3*sd(tempDf$fixed_acidity)
+
+CapabilityAnaylsis <- 
+ ggplot(tempDf, aes(x = fixed_acidity)) + #init ggplot
+  geom_histogram(binwidth = .75, color="purple") + #make the histogram
+  stat_QC_Capability(
+    LSL=4.50, USL=17.00,                    #Specify LSL and USL
+    show.cap.summary = c("Cp", "Cpk"), #selected summary
+    digits = 2,                        #report two digits
+    method="XmR") +                    #Use the XmR method
+scale_x_continuous(expand =  expand_scale(mult = c(0.15,.65)))+ #pad the X-axis
+geom_vline(xintercept=mean(tempDf$fixed_acidity), colour="Blue") +
+  geom_text(aes(x=mean(tempDf$fixed_acidity)), y = 25.5, label="Mean", colour="Blue", angle=0, vjust = 1.2, text=element_text(size=11))+
+  geom_vline(xintercept=UCL, colour="Blue") +
+  geom_text(aes(x=UCL), y = 25.5, label="3sd", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11))+
+  geom_vline(xintercept=LCL, colour="Blue") +
+  geom_text(aes(x=LCL), y = 25.5, label="-3sd", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11))
+
+
+CapabilityAnaylsis  #plot the graph
+   
+
   })
 }
 
@@ -128,13 +263,314 @@ shinyApp(ui, server)
 
 
 
+```{r}
+if (interactive()) {
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      fileInput("file1", "Choose CSV File",
+        accept = c(
+          "text/csv",
+          "text/comma-separated-values,text/plain",
+          ".csv")
+        ),
+      tags$hr(),
+      checkboxInput("header", "Header", TRUE)
+    ),
+    mainPanel(
+      tableOutput("contents"),
+      plotOutput("hist1"),
+      plotOutput("hist2")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$contents <- renderTable({
+    # input$file1 will be NULL initially. After the user selects
+    # and uploads a file, it will be a data frame with 'name',
+    # 'size', 'type', and 'datapath' columns. The 'datapath'
+    # column will contain the local filenames where the data can
+    # be found.
+    inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+
+    fread(inFile$datapath, header = input$header) -> tempDf
+    head(tempDf)
+  })
+  output$hist1 <- renderPlot({
+    
+    inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+    
+    fread(inFile$datapath, header = input$header) -> tempDf
+    
+    tempDf$row_num <- seq.int(nrow(tempDf))
+    
+   INDV <- ggplot(tempDf, aes(x = row_num, y=fixed_acidity)) +
+    geom_point() + geom_line() +
+      ggtitle("XmR", "geom_point() and geom_line() required") + 
+       ylim(-4,16) + #make scales same
+       scale_x_continuous(expand =  expand_scale(mult = .15)) + #pad x-axis
+      stat_QC(method="XmR", auto.label = T) +
+         ggtitle("XmR", subtitle = "Auto Label QC lines")
+    
+   plot(INDV)
+  })  
+   output$hist2 <- renderPlot({
+     
+     
+     inFile <- input$file1
+
+    if (is.null(inFile))
+      return(NULL)
+    
+    fread(inFile$datapath, header = input$header) -> tempDf
+    
+    tempDf$row_num <- seq.int(nrow(tempDf))
+     
+   UCL= mean(tempDf$fixed_acidity) + 3*sd(tempDf$fixed_acidity)
+   LCL= mean(tempDf$fixed_acidity) - 3*sd(tempDf$fixed_acidity)
+
+CapabilityAnaylsis <- 
+ ggplot(tempDf, aes(x = fixed_acidity)) + #init ggplot
+  geom_histogram(binwidth = .75, color="purple") + #make the histogram
+  stat_QC_Capability(
+    LSL=4.50, USL=17.00,                    #Specify LSL and USL
+    show.cap.summary = c("Cp", "Cpk"), #selected summary
+    digits = 2,                        #report two digits
+    method="XmR") +                    #Use the XmR method
+scale_x_continuous(expand =  expand_scale(mult = c(0.15,.65)))+ #pad the X-axis
+geom_vline(xintercept=mean(tempDf$fixed_acidity), colour="Blue") +
+  geom_text(aes(x=mean(tempDf$fixed_acidity)), y = 25.5, label="Mean", colour="Blue", angle=0, vjust = 1.2, text=element_text(size=11))+
+  geom_vline(xintercept=UCL, colour="Blue") +
+  geom_text(aes(x=UCL), y = 25.5, label="3sd", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11))+
+  geom_vline(xintercept=LCL, colour="Blue") +
+  geom_text(aes(x=LCL), y = 25.5, label="-3sd", colour="blue", angle=0, vjust = 1.2, text=element_text(size=11))
+
+
+CapabilityAnaylsis  #plot the graph
+   
+
+  })
+}
+
+shinyApp(ui, server)
+}
+```
+
+```{r}
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput(inputId = "num", 
+    label = "Choose a number", 
+    value = 25, min = 1, max = 100),
+  plotOutput("hist"),
+  verbatimTextOutput("stats")
+)
+
+server <- function(input, output) {
+  
+  data <- reactive({
+    rnorm(input$num)
+  })
+  
+  output$hist <- renderPlot({
+    hist(data())
+  })
+  output$stats <- renderPrint({
+    summary(data())
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+https://stackoverflow.com/questions/31686773/shiny-dynamic-number-of-output-elements-plots 
+```{r}
+shinyUI(pageWithSidebar(            
+        headerPanel("Dynamic number of plots"),            
+        sidebarPanel(
+                selectInput(inputId = "choosevar",
+                            label = "Choose Cut Variable:",
+                            choices = c("Nr. of Gears"="gear", "Nr. of Carburators"="carb"))
+        ),            
+        mainPanel(
+                # This is the dynamic UI for the plots
+                uiOutput("plots")
+        )
+))
+
+###########################
+#install.packages('googleVis')
+library(googleVis)
+shinyServer(function(input, output) {
+        #dynamically create the right number of htmlOutput
+        output$plots <- renderUI({
+                plot_output_list <- lapply(unique(mtcars[,input$choosevar]), function(i) {
+                        plotname <- paste0("plot", i)
+                        htmlOutput(plotname)
+                })
+
+                tagList(plot_output_list)
+        }) 
+
+        # Call renderPlot for each one. Plots are only actually generated when they
+        # are visible on the web page. 
+
+
+        for (i in 1:max(unique(mtcars[,"gear"]),unique(mtcars[,"carb"]))) {
+                local({
+                        my_i <- i
+                        plotname <- paste0("plot", my_i)
+
+                        output[[plotname]] <- renderGvis({
+                                data <- mtcars[mtcars[,input$choosevar]==my_i,]
+                                if(dim(data)[1]>0){
+                                gvisColumnChart(    
+                                        data, xvar='hp', yvar='mpg' 
+                                )}
+                                else NULL
+                        })  
+                })
+        }
+
+})
+
+```
 
 
 
+https://community.rstudio.com/t/shiny-app-with-dynamic-number-of-datatables/2405/2 
+```{r}
+library(shiny)
+library(DT)
 
+maxTables <- 5
 
+ui <- fluidPage(
+  sidebarPanel(
+    sliderInput("n", "Number of DTs", value=1, min=1, max=maxTables)
+  ),
+  mainPanel(
+    uiOutput("dt")
+  )
+)
 
+server <- function(input, output, session) {
+  output$dt <- renderUI({
+    lapply(as.list(seq_len(input$n)), function(i) {
+      id <- paste0("dt", i)
+      DT::dataTableOutput(id)
+    })
+  })
+    
+  for (i in seq_len(maxTables)) {
+    id <- paste0("dt", i)
+    output[[id]] <- DT::renderDataTable(iris)
+  }
+}
 
+shinyApp(ui, server)
+```
+
+```{r}
+library(shiny)
+ui <- fluidPage(
+  textInput("divID", "Enter an ID for the custom area:", ""),
+  helpText("Leave the text input blank for automatically unique IDs."),
+  actionButton("isrt", "Add a datatable"), 
+  tags$div(id = "placeholder")
+)
+
+server <- function(input, output, session) {
+  rv <- reactiveValues()
+  
+  # take a dependency on `isrt` button
+  observeEvent(input$isrt, {
+    
+    # handle the case when user does not provide ID
+    divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
+    else input$divID
+    dtID <- paste0(divID, "DT")
+    btnID <- paste0(divID, "rmv")
+    
+    # only create button if there is none
+    if (is.null(rv[[divID]])) {
+      
+      insertUI(
+        selector = "#placeholder",
+        ui = tags$div(id = divID,
+                      actionButton(btnID, "Remove this table", class = "pull-right btn btn-danger"),
+                      DT::dataTableOutput(dtID),
+                      hr()
+        )
+      )
+      
+      output[[dtID]] <- DT::renderDataTable(head(iris))
+      
+      # make a note of the ID of this section, so that it is not repeated accidentally
+      rv[[divID]] <- TRUE
+      
+      # create a listener on the newly-created button that will
+      # remove it from the app when clicked
+      observeEvent(input[[btnID]], {
+        removeUI(selector = paste0("#", divID))
+        
+        rv[[divID]] <- NULL
+        
+      }, ignoreInit = TRUE, once = TRUE)
+      
+      # otherwise, print a message to the console
+    } else {
+      message("The button has already been created!")
+    }
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+shinyApp(
+  
+  
+ ui = fluidPage(
+   varSelectInput("variables", "Variable:", mtcars, multiple = TRUE),
+   tableOutput("data"),
+   sidebarLayout(
+    sidebarPanel(
+      fileInput("file1", "Choose CSV File",
+        accept = c(
+          "text/csv",
+          "text/comma-separated-values,text/plain",
+          ".csv")
+        ),
+      tags$hr(),
+      checkboxInput("header", "Header", TRUE)
+    ),
+    mainPanel(
+      tableOutput("contents"),
+      plotOutput("hist1"),
+      plotOutput("hist2")
+    )
+  )
+ ),
+ server = function(input, output) {
+   output$data <- renderTable({
+      if (length(input$variables) == 0) return(mtcars)
+      mtcars %>% dplyr::select(!!!input$variables)
+   }, rownames = TRUE)
+ }
+)
+```
 
 
 
